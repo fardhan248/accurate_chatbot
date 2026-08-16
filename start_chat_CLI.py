@@ -114,8 +114,19 @@ def main(query: str, thread_id: str = None, bm25: bool = True, rerank: bool = Tr
     else:
         raise ValueError(response.json())
 
+def get_graph():
+    url = "http://localhost:8000/get_graph"
+
+    try:
+        response = requests.get(url)
+    except Exception as e:
+        raise ValueError("Error:", str(e))
+
+    return response.status_code
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("-graph", "--get-graph", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--bm25", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--rerank", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("-reset", "--reset-knowledge", action=argparse.BooleanOptionalAction, default=False)
@@ -124,11 +135,17 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    graph = bool(args.get_graph)
     bm25 = bool(args.bm25)
     rerank = bool(args.rerank)
     reset = bool(args.reset_knowledge)
     thread_id = args.thread_id
     doc = args.document_path
+
+    if graph:
+        status = get_graph()
+        print("Status", str(status))
+        sys.exit()
 
     # Upload PDF
     if reset:
