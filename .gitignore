@@ -2,6 +2,12 @@
 key.txt
 .git
 *.gguf
+*.ipynb
+pipeline.md
 
 __pycache__/
 *.pyc
+.vscode
+
+pg_data/
+chroma_data/
