@@ -65,7 +65,7 @@ def upload(file_path: str = r"docs\MODUL PEMBELAJARAN.pdf"):
 
     return response.status_code
 
-def main(query: str, thread_id: str = None, bm25: bool = True, rerank: bool = True):
+def main(query: str, thread_id: str = None, bm25: bool = False, rerank: bool = False, enhanced: bool = False):
     url = "http://localhost:8000/chat"
 
     if thread_id:
@@ -74,12 +74,14 @@ def main(query: str, thread_id: str = None, bm25: bool = True, rerank: bool = Tr
             "input_prompt": query,
             "bm25": bm25,
             "rerank": rerank,
+            "enhanced": enhanced,
         }
     else:
         payload = {
             "input_prompt": query,
             "bm25": bm25,
             "rerank": rerank,
+            "enhanced": enhanced,
         }
 
     try:
@@ -129,6 +131,7 @@ if __name__ == "__main__":
     parser.add_argument("-graph", "--get-graph", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--bm25", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--rerank", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--enhanced", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("-reset", "--reset-knowledge", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("-id", "--thread-id", type=str, default=None)
     parser.add_argument("-doc", "--document-path", type=str, default=r"docs\MODUL PEMBELAJARAN.pdf")
@@ -138,6 +141,7 @@ if __name__ == "__main__":
     graph = bool(args.get_graph)
     bm25 = bool(args.bm25)
     rerank = bool(args.rerank)
+    enhanced = bool(args.enhanced)
     reset = bool(args.reset_knowledge)
     thread_id = args.thread_id
     doc = args.document_path
@@ -161,7 +165,7 @@ if __name__ == "__main__":
         while True:
             query = input("--- User:\n> ")
 
-            thread_id = main(query, thread_id, bm25, rerank)
+            thread_id = main(query, thread_id, bm25, rerank, enhanced)
 
     except KeyboardInterrupt:
         print("Chat thread id:", thread_id)

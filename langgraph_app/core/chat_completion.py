@@ -23,6 +23,7 @@ async def chat_workflow(db_pool, input_data: ChatInput):
     input_prompt = input_data.input_prompt
     bm25 = input_data.bm25
     rerank = input_data.rerank
+    enhanced = input_data.enhanced
     
     config: RunnableConfig = {
         "configurable": {
@@ -40,6 +41,7 @@ async def chat_workflow(db_pool, input_data: ChatInput):
                     "messages": [HumanMessage(content=input_prompt)],
                     "bm25": bm25,
                     "rerank": rerank,
+                    "enhanced": enhanced,
                 },
                 config,
             )

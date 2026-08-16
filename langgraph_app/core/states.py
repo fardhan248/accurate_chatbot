@@ -50,6 +50,7 @@ class State(TypedDict):
     # streaming_mode: bool = False
     bm25: bool
     rerank: bool
+    enhanced: bool
 
     messages: Annotated[list[BaseMessage], add_messages] = [] # list of AnyMessage, Human, AI, Tool, System
     selected_knowledge: Annotated[list[dict[str, Any]], items_reducer] = [] # list of dict: [{"knowledge_id": knowledge_id, "chunk_ids": [id_1, id_2]}]

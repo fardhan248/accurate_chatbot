@@ -562,42 +562,45 @@ async def rag(state: State):
     # Get knowledge ids and chunk ids
     knowledge_ids = [x["knowledge_id"] for x in selected_knowledge]
     chunk_ids = [c_id for x in selected_knowledge for c_id in x["chunk_ids"]]
-    
-    # Trim messages and convert to dict
-    messages = await trimming_message(state["messages"])
-       
-    # Get chunk knowledge
-    results = await get_contexts_from_current_state(
-        state.get("chunk_knowledge", []),
-        state.get("tables", []),
-        state.get("image_in_table", []),
-        state.get("image_out_table", [])
-    )
-    reformat_chunk_knowledge, reformat_tables, reformat_image_in_table, reformat_image_out_table = results
 
-    system_query = prompts.RAG_SYSTEM_QUERY.format_map({
-        "knowledges": reformat_chunk_knowledge,
-        "images_in_table_descriptions": reformat_image_in_table,
-        "images_out_table_descriptions": reformat_image_out_table,
-        "tables": reformat_tables,
-    })
+    if state.get("enhanced", False):
+        # Trim messages and convert to dict
+        messages = await trimming_message(state["messages"])
+        
+        # Get chunk knowledge
+        results = await get_contexts_from_current_state(
+            state.get("chunk_knowledge", []),
+            state.get("tables", []),
+            state.get("image_in_table", []),
+            state.get("image_out_table", [])
+        )
+        reformat_chunk_knowledge, reformat_tables, reformat_image_in_table, reformat_image_out_table = results
 
-    final_query = [
-        SystemMessage(content=system_query),
-        *messages[:-1],
-        HumanMessage(content=f"User's query: {messages[-1].content}"),
-    ]
+        system_query = prompts.RAG_SYSTEM_QUERY.format_map({
+            "knowledges": reformat_chunk_knowledge,
+            "images_in_table_descriptions": reformat_image_in_table,
+            "images_out_table_descriptions": reformat_image_out_table,
+            "tables": reformat_tables,
+        })
 
-    response = await llm_rag.ainvoke(final_query)
+        final_query = [
+            SystemMessage(content=system_query),
+            *messages[:-1],
+            HumanMessage(content=f"User's query: {messages[-1].content}"),
+        ]
 
-    if isinstance(response, dict):
-        text = response.get("question", "none")
-    else:
-        text = response.content
-    print(text, flush=True)
+        response = await llm_rag.ainvoke(final_query)
 
-    if text in ["none", ""]:
-        return {}
+        if isinstance(response, dict):
+            text = response.get("question", "none")
+        else:
+            text = response.content
+        print(text, flush=True)
+
+        if text in ["none", ""]:
+            return {}
+    else: 
+        text = state["messages"][-1].content
 
     # Retrieve from the database
     vector_store = await get_vector_store_chroma("knowledges")
