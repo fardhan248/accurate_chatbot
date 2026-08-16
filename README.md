@@ -35,8 +35,14 @@ Link Repository: [accurate_chatbot](https://github.com/fardhan248/accurate_chatb
 
 ### Cara Menjalankan
 1. Clone repository
+```
+git clone https://github.com/fardhan248/accurate_chatbot.git
+```
 2. Pindah repository
-3. Buat file .env
+```
+cd accurate_chatbot
+```
+3. Buat file .env sesuai dengan contoh .env.example
 4. Jalankan docker compose
 ```
 docker compose -f docker-compose.yml up -d
