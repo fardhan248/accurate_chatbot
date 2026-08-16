@@ -24,13 +24,13 @@ Link Repository: [accurate_chatbot](https://github.com/fardhan248/accurate_chatb
 | POSTGRES_USER | Username untuk database Postgres |
 | POSTGRES_DB | Nama database Postgres |
 | POSTGRES_PASSWORD | Password untuk database Postgres |
-| TZ | Time zone yang digunakan untuk database Postgres<br>Contoh: <area>/<location> |
+| TZ | Time zone yang digunakan untuk database Postgres<br>Contoh: `<area>/<location>` |
 | MINIO_ROOT_USER | Username untuk object storage MinIO |
 | MINIO_ROOT_PASSWORD | Password untuk object storage MinIO |
-| MINIO_ENDPOINT | Endpoint untuk object storage MinIO<br>Contoh: <nama_service>:9000 |
-| LLAMA_CPP_LLM_ENDPOINT | Endpoint untuk llama.cpp LLM<br>Contoh: <nama_service>:8080 |
-| LLAMA_CPP_EMBEDDING_ENDPOINT | Endpoint untuk llama.cpp embedding<br>Contoh: <nama_service>:8080 |
-| LLAMA_CPP_RERANKER_ENDPOINT | Endpoint untuk llama.cpp reranker<br>Contoh: <nama_service>:8080 |
+| MINIO_ENDPOINT | Endpoint untuk object storage MinIO<br>Contoh: `<nama_service>:9000` |
+| LLAMA_CPP_LLM_ENDPOINT | Endpoint untuk llama.cpp LLM<br>Contoh: `<nama_service>:8080` |
+| LLAMA_CPP_EMBEDDING_ENDPOINT | Endpoint untuk llama.cpp embedding<br>Contoh: `<nama_service>:8080` |
+| LLAMA_CPP_RERANKER_ENDPOINT | Endpoint untuk llama.cpp reranker<br>Contoh: `<nama_service>:8080` |
 | LLAMA_CPP_KEY | API key untuk seluruh service llama.cpp |
 
 ### Cara Menjalankan
