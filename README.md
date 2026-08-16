@@ -65,7 +65,7 @@ Keterangan argumen:
 
 ## Arsitektur
 ### Ekstrak Dokumen
-![ekstrak_dokumen](docs\extract_accurate.png)
+![ekstrak_dokumen](docs/extract_accurate.png)
 
 Deskripsi alur:
 1. Ekstrak seluruh teks (termasuk di dalam tabel) dari PDF menggunakan metode “fast” pada library unstructured. Hasil dari metode ini adalah teks yang dikategorikan sebagai “Title”, “Text”, “NarativeText”, “ListItem”, dll. 
@@ -85,7 +85,7 @@ Deskripsi alur:
 
 ### Proses Insert dan Retrieve Vector Database
 #### Embed Knowledge
-![embed_knowledge](docs\embed.png)
+![embed_knowledge](docs/embed.png)
 
 Deskripsi alur:
 1. Ekstrak chunk teks, gambar-dalam-tabel, gambar-luar-tabel, dan tabel (beserta deskripsinya) dari dokumen PDF.
@@ -94,7 +94,7 @@ Deskripsi alur:
 4. Wrapper tersebut sudah otomatis konversi data dokumen dan menyimpannya langsung ke dalam database.
 
 #### Retrieve Knowledge
-![retrieve_knowledge](docs\retrieve.png)
+![retrieve_knowledge](docs/retrieve.png)
 
 Deskripsi alur:
 1. Mendapatkan query dari user, lalu diteruskan ke dalam state Langgraph. Jika fitur query rewriting diaktifkan, query dimasukkan terlebih dahulu ke dalam LLM beserta konteks pada riwayat percakapan terakhir (jika ada). 
@@ -104,7 +104,7 @@ Deskripsi alur:
 5. Terakhir, menyimpan seluruh data hasil retrieve ke dalam state untuk di-inject ke dalam system prompt saat invoke LLM nanti.  
 
 ### Arsitektur Langgraph
-![workflow_chatbot](langgraph_app\graph.png)
+![workflow_chatbot](langgraph_app/graph.png)
 
 Deskripsi alur:
 1. Ketika user mengirim query, langkah pertama adalah memproses query tersebut untuk dicari chunk dokumen yang relevan di node “rag”. Lalu, ketika chunk dokumen sudah didapatkan, data tersebut disimpan di dalam state Langgraph. Setelah query rewriting, konteks chunk pada percakapan sebelumnya dihapus agar tidak boros token.
