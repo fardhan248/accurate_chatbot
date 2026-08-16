@@ -388,7 +388,7 @@ async def fetch_new_knowledge(
         if state["bm25"]:
             bm25 = BM25Retriever()
             await bm25.start(results)
-            results += await bm25.retrieve(query, k=8)
+            results += await bm25.retrieve(query, k=10)
         
         if len(results) == 0:
             print("Tool: fetch_new_knowledge end", flush=True)
@@ -400,7 +400,7 @@ async def fetch_new_knowledge(
             instruct = "Classify whether the document matches the query topic"
             final_query = f"Instruct: {instruct}\nQuery:{query}"
 
-            rerank_ids = await cm.reranker.rerank(final_query, list_document, 5)
+            rerank_ids = await cm.reranker.rerank(final_query, list_document, 13)
             results = [results[i] for i in rerank_ids]
         print(results, flush=True)
             
@@ -563,7 +563,7 @@ async def rag(state: State):
     knowledge_ids = [x["knowledge_id"] for x in selected_knowledge]
     chunk_ids = [c_id for x in selected_knowledge for c_id in x["chunk_ids"]]
 
-    if state.get("enhanced", False):
+    if state["enhanced"]:
         # Trim messages and convert to dict
         messages = await trimming_message(state["messages"])
         
@@ -604,7 +604,7 @@ async def rag(state: State):
 
     # Retrieve from the database
     vector_store = await get_vector_store_chroma("knowledges")
-    retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=13) #, {"type": "text"})
+    retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=10) #, {"type": "text"})
 
     instruct = "Given a user query about the document knowledge, retrieve the relevant passages that answer the query"
     final_query = f"Instruct: {instruct}\nQuery:{text}"
@@ -625,7 +625,7 @@ async def rag(state: State):
         instruct = "Classify whether the document matches the query topic"
         final_query = f"Instruct: {instruct}\nQuery:{text}"
 
-        rerank_ids = await cm.reranker.rerank(final_query, list_document, 8)
+        rerank_ids = await cm.reranker.rerank(final_query, list_document, 13)
         results = [results[i] for i in rerank_ids]
     print(results, flush=True)
     
