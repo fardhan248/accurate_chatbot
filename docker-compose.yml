@@ -107,7 +107,7 @@ services:
                         echo "SKIP (already exists): $$filename"
                     else
                         echo "DOWNLOADING: $$filename"
-                        wget -c -q --show-progress -O "/models/$$filename.tmp" "$$url" && mv "/models/$$filename.tmp" "/models/$$filename"
+                        wget -c -q -O "/models/$$filename.tmp" "$$url" && mv "/models/$$filename.tmp" "/models/$$filename"
                     fi
                 done
                 echo "All models ready"
