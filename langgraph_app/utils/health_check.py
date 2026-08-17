@@ -1,5 +1,10 @@
 import utils.contextmanager_utils as cm
-import httpx
+import httpx, os
+
+LLAMA_CPP_EMBEDDING_ENDPOINT = os.getenv("LLAMA_CPP_EMBEDDING_ENDPOINT")
+LLAMA_CPP_LLM_ENDPOINT = os.getenv("LLAMA_CPP_LLM_ENDPOINT")
+LLAMA_CPP_RERANKER_ENDPOINT = os.getenv("LLAMA_CPP_RERANKER_ENDPOINT")
+LLAMA_CPP_KEY = os.getenv("LLAMA_CPP_KEY")
 
 pool = None
 
@@ -7,7 +12,7 @@ async def llm_check(results):
     # llama_cpp_llm (qwen)
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get("http://llama_cpp_llm:8080/health")
+            response = await client.get(f"http://{LLAMA_CPP_LLM_ENDPOINT}/health", headers={"Authorization": f"Bearer {LLAMA_CPP_KEY}"})
             
             if response.status_code == 200:
                 results["llama_cpp_llm"] = {"status": "success", "content": response.json()}
@@ -20,7 +25,7 @@ async def llm_check(results):
     # llama_cpp_embedding (qwen)
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get("http://llama_cpp_embedding:8080/health")
+            response = await client.get(f"http://{LLAMA_CPP_EMBEDDING_ENDPOINT}/health", headers={"Authorization": f"Bearer {LLAMA_CPP_KEY}"})
             
             if response.status_code == 200:
                 results["llama_cpp_embedding"] = {"status": "success", "content": response.json()}
@@ -31,17 +36,17 @@ async def llm_check(results):
         results["llama_cpp_embedding"] = {"status": "error", "content": str(e)}
 
     # llama_cpp_rerank (qwen)
-        # try:
-        #     async with httpx.AsyncClient() as client:
-        #         response = await client.get("http://llama_cpp_rerank:8080/health")
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"http://{LLAMA_CPP_RERANKER_ENDPOINT}/health", headers={"Authorization": f"Bearer {LLAMA_CPP_KEY}"})
                 
-        #         if response.status_code == 200:
-        #             results["llama_cpp_rerank"] = {"status": "success", "content": response.json()}
-        #         else:
-        #             results["llama_cpp_rerank"] = {"status": "error", "content": response.json()}
+                if response.status_code == 200:
+                    results["llama_cpp_rerank"] = {"status": "success", "content": response.json()}
+                else:
+                    results["llama_cpp_rerank"] = {"status": "error", "content": response.json()}
         
-        # except Exception as e:
-        #     results["llama_cpp_rerank"] = {"status": "error", "content": str(e)}
+        except Exception as e:
+            results["llama_cpp_rerank"] = {"status": "error", "content": str(e)}
 
     return results
     
@@ -54,6 +59,21 @@ async def db_check(results):
     
     except Exception as e:
         results["asyncpg_pool"] = {"status": "error", "content": str(e)}
+
+    # MinIO
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "http://minio:9000/minio/health/live"
+            )
+
+            if response.status_code == 200:
+                results["minio"] = {"status": "success", "content": "ok"}
+            else:
+                results["minio"] = {"status": "success", "content": "failed"}
+    
+    except Exception as e:
+        results["minio"] = {"status": "error", "content": str(e)}
     
     # ChromaDB
     try:
@@ -66,7 +86,6 @@ async def db_check(results):
     
     except Exception as e:
         results["chromadb"] = {"status": "error", "content": str(e)}
-        
         
     # Example of chroma db data
     try:
