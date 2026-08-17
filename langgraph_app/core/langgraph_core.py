@@ -375,11 +375,18 @@ async def fetch_new_knowledge(
     # Get knowledge ids and chunk ids
     knowledge_ids = [x["knowledge_id"] for x in selected_knowledge]
     chunk_ids = [c_id for x in selected_knowledge for c_id in x["chunk_ids"]]
+
+    use_rerank = state["rerank"]
+    if state["bm25"]:
+        if not use_rerank:
+            use_rerank = True
+    elif use_rerank:
+        use_rerank = False
     
     try:
         # Retrieve from the database
         vector_store = await get_vector_store_chroma(f"knowledges")
-        retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=10)
+        retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=8)
 
         instruct = "Given a user query about the document knowledge, retrieve the relevant passages that answer the query"
         final_query = f"Instruct: {instruct}\nQuery:{query}"
@@ -388,19 +395,19 @@ async def fetch_new_knowledge(
         if state["bm25"]:
             bm25 = BM25Retriever()
             await bm25.start(results)
-            results += await bm25.retrieve(query, k=10)
+            results += await bm25.retrieve(query, k=8)
         
         if len(results) == 0:
             print("Tool: fetch_new_knowledge end", flush=True)
             return "Success. Based on the query, the knowledge is not exist in the database."
 
         results = await get_metadata_and_content(results)
-        if state["rerank"]:
+        if use_rerank:
             list_document = [r["page_content"] for r in results]
             instruct = "Classify whether the document matches the query topic"
             final_query = f"Instruct: {instruct}\nQuery:{query}"
 
-            rerank_ids = await cm.reranker.rerank(final_query, list_document, 13)
+            rerank_ids = await cm.reranker.rerank(final_query, list_document, 8)
             results = [results[i] for i in rerank_ids]
         print(results, flush=True)
             
@@ -497,40 +504,20 @@ async def extract_content(message) -> str:
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-4B", trust_remote_code=True)
 
 def count_tokens(messages: Union[str, List[BaseMessage]]) -> int:
-    chat_template = []
-    for msg in messages:
-        role = msg.type
-        content = msg.content
-    
-        if role == "human":
-            role = "user"
-        elif role == "ai":
-            role = "assistant"
+    if isinstance(messages, str):
+        return len(tokenizer.encode(messages, add_special_tokens=False))
 
+    total = 0
+    for msg in messages:
+        content = msg.content
         if isinstance(content, list):
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "text":
-                    chat_template.append(
-                        {
-                            "role": role,
-                            "content": block["text"],
-                        }
-                    )
-
+                    total += len(tokenizer.encode(block["text"]), add_special_tokens=False)
         elif isinstance(content, str) and content:
-            chat_template.append(
-                {
-                    "role": role,
-                    "content": content,
-                }
-            )
+            total += len(tokenizer.encode(content, add_special_tokens=False))
 
-    text = tokenizer.apply_chat_template(chat_template , tokenize=False)
-
-    return len(tokenizer.encode(
-        text,
-        add_special_tokens=False,
-    ))
+    return total
     
 async def trimming_message(messages):
     messages = trim_messages(
@@ -559,9 +546,12 @@ async def rag(state: State):
 
     selected_knowledge = copy.deepcopy(state.get("selected_knowledge", [])) # [{"knowledge_id": knowledge_id, "chunk_ids": [id_1, id_2]}]
    
-    # Get knowledge ids and chunk ids
-    knowledge_ids = [x["knowledge_id"] for x in selected_knowledge]
-    chunk_ids = [c_id for x in selected_knowledge for c_id in x["chunk_ids"]]
+    use_rerank = state["rerank"]
+    if state["bm25"]:
+        if not use_rerank:
+            use_rerank = True
+    elif use_rerank:
+        use_rerank = False
 
     if state["enhanced"]:
         # Get chunk knowledge
@@ -603,10 +593,10 @@ async def rag(state: State):
             return {}
     else: 
         text = state["messages"][-1].content
-
+    print(text, flush=True)
     # Retrieve from the database
     vector_store = await get_vector_store_chroma("knowledges")
-    retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=10) #, {"type": "text"})
+    retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=8) #, {"type": "text"})
 
     instruct = "Given a user query about the document knowledge, retrieve the relevant passages that answer the query"
     final_query = f"Instruct: {instruct}\nQuery:{text}"
@@ -616,18 +606,18 @@ async def rag(state: State):
     if state["bm25"]:
         bm25 = BM25Retriever()
         await bm25.start(results)
-        results += await bm25.retrieve(text, k=10)
+        results += await bm25.retrieve(text, k=8)
 
     if len(results) == 0:
         return {}
 
     results = await get_metadata_and_content(results)
-    if state["rerank"]:
+    if use_rerank:
         list_document = [r["page_content"] for r in results]
         instruct = "Classify whether the document matches the query topic"
         final_query = f"Instruct: {instruct}\nQuery:{text}"
 
-        rerank_ids = await cm.reranker.rerank(final_query, list_document, 13)
+        rerank_ids = await cm.reranker.rerank(final_query, list_document, 8)
         results = [results[i] for i in rerank_ids]
     print(results, flush=True)
     
@@ -691,7 +681,7 @@ async def basic(state: State):
         *messages,
         HumanMessage(content=f"User's query: {state['query']}"),
     ]
-
+    print("token system:", count_tokens([SystemMessage(content=system_query)]), flush=True)
     final_query = await trimming_message(final_query)
 
     response = await llm_tools.ainvoke(final_query)
@@ -725,7 +715,7 @@ async def basic_conclusion(state: State):
         *messages,
         HumanMessage(content=f"User's query: {state['query']}"),
     ]
-    
+    print("token system (conclusion):", count_tokens([SystemMessage(content=system_query)]), flush=True)
     final_query = await trimming_message(final_query)
 
     response = await llm_output.ainvoke(final_query)
