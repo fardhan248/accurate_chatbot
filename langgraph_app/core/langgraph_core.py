@@ -537,10 +537,10 @@ async def trimming_message(messages):
         messages,
         strategy="last",
         token_counter=count_tokens,
-        max_tokens=8000,
+        max_tokens=10200,
         start_on="human",
         end_on=("human","tool"),
-        include_system=False
+        include_system=True
     )
     
     return messages 
@@ -564,9 +564,6 @@ async def rag(state: State):
     chunk_ids = [c_id for x in selected_knowledge for c_id in x["chunk_ids"]]
 
     if state["enhanced"]:
-        # Trim messages and convert to dict
-        messages = await trimming_message(state["messages"])
-        
         # Get chunk knowledge
         results = await get_contexts_from_current_state(
             state.get("chunk_knowledge", []),
@@ -583,11 +580,16 @@ async def rag(state: State):
             "tables": reformat_tables,
         })
 
+        messages = state["messages"]
+
         final_query = [
             SystemMessage(content=system_query),
             *messages[:-1],
             HumanMessage(content=f"User's query: {messages[-1].content}"),
         ]
+
+        # Trim messages
+        final_query = await trimming_message(final_query)
 
         response = await llm_rag.ainvoke(final_query)
 
@@ -665,8 +667,7 @@ async def rag(state: State):
 ## Agent: Basic 
 async def basic(state: State):
     print("Node: basic", flush=True)
-    messages = await trimming_message(state["messages"])
-
+    
     results = await get_contexts_from_current_state(
         state.get("chunk_knowledge", []),
         state.get("tables", []),
@@ -683,11 +684,15 @@ async def basic(state: State):
         "tables": reformat_tables,
     })   
 
+    messages = state["messages"]
+
     final_query = [
         SystemMessage(content=system_query),
         *messages,
         HumanMessage(content=f"User's query: {state['query']}"),
     ]
+
+    final_query = await trimming_message(final_query)
 
     response = await llm_tools.ainvoke(final_query)
     print(response, flush=True)
@@ -697,7 +702,6 @@ async def basic(state: State):
 
 async def basic_conclusion(state: State):
     print("Node: basic_conclusion", flush=True)
-    messages = await trimming_message(state["messages"])
 
     results = await get_contexts_from_current_state(
         state.get("chunk_knowledge", []),
@@ -714,11 +718,15 @@ async def basic_conclusion(state: State):
         "tables": reformat_tables,
     })   
 
+    messages = state["messages"]
+    
     final_query = [
         SystemMessage(content=system_query),
         *messages,
         HumanMessage(content=f"User's query: {state['query']}"),
     ]
+    
+    final_query = await trimming_message(final_query)
 
     response = await llm_output.ainvoke(final_query)
     print(response, flush=True)
