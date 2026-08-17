@@ -35,9 +35,10 @@ embedding = OpenAIEmbeddings(
 )
 
 class LLamaCppReranker:
-    def __init__(self, base_url: str = LLAMA_CPP_RERANKER_ENDPOINT, model: str = "/models/Qwen3-Reranker-0.6B-Q4_K_M.gguf"):
+    def __init__(self, api_key: str, base_url: str = LLAMA_CPP_RERANKER_ENDPOINT, model: str = "/models/Qwen3-Reranker-0.6B-Q4_K_M.gguf"):
         self.base_url = base_url
         self.model = model
+        self.api_key = api_key
         self.client = None
 
     async def start(self):
@@ -59,6 +60,9 @@ class LLamaCppReranker:
             response = await client.post(
                 f"http://{self.base_url}/v1/rerank",
                 json=payload,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}"
+                },
             )
 
         response.raise_for_status()

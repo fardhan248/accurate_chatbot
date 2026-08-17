@@ -12,6 +12,7 @@ import chromadb, os
 MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER")
 MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
+LLAMA_CPP_KEY = os.getenv("LLAMA_CPP_KEY")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,7 +24,7 @@ async def lifespan(app: FastAPI):
         secret_key=MINIO_ROOT_PASSWORD,
         secure=False,
     )
-    cm.reranker = LLamaCppReranker()
+    cm.reranker = LLamaCppReranker(api_key=LLAMA_CPP_KEY)
 
     await cm.reranker.start()
     app.state.pool = await get_db_pool()
