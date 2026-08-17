@@ -47,7 +47,11 @@ cd accurate_chatbot
 ```
 docker compose -f docker-compose.yml up -d
 ```
-5. Jalankan script python interaktif CLI
+5. Install library requests untuk menjalankan CLI interaktif
+```
+pip install requests
+```
+6. Jalankan script python CLI interaktif
 ```
 python start_chat_CLI.py --reset-knowledge
 ```
