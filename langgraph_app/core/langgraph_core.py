@@ -128,7 +128,7 @@ async def search_for_images_from_tables(tables_state, selected_image_in_tab_stat
 
 
 # Filter chunk just for text
-async def filter_chunk(chunk_append, selected_knowledge_dict, knowledge_id_append): #, replace_ids, knowledge_id_append):
+async def filter_chunk(chunk_append, selected_knowledge_dict, knowledge_id_append):
     new_chunk_append = [] 
     new_selected_knowledge_dict = {}
     # new_replace_ids = set()
@@ -147,10 +147,7 @@ async def filter_chunk(chunk_append, selected_knowledge_dict, knowledge_id_appen
                 if knowledge_id not in new_knowledge_id_append:
                     new_knowledge_id_append.append(knowledge_id)
 
-            # if knowledge_id in replace_ids:
-            #     new_replace_ids.add(knowledge_id)
-
-    return new_chunk_append, new_selected_knowledge_dict, new_knowledge_id_append # new_replace_ids, new_knowledge_id_append
+    return new_chunk_append, new_selected_knowledge_dict, new_knowledge_id_append
 
 async def filter_chunk_tool(chunk_append, selected_knowledge_dict, replace_ids, knowledge_id_append):
     new_chunk_append = [] 
@@ -176,36 +173,6 @@ async def filter_chunk_tool(chunk_append, selected_knowledge_dict, replace_ids, 
 
     return new_chunk_append, new_selected_knowledge_dict, new_replace_ids, new_knowledge_id_append
 
-
-# Retrieve image data
-# async def get_image_base64(bucket: str, object_name: str) -> str:
-#     response = await cm.minio.get_object(bucket, object_name)
-#     data = await response.read()
-#     return base64.b64encode(data).decode("utf-8")
-
-# async def get_images_base64_batch(bucket: str, object_names: list[str], max_concurrency: int = 5) -> list[str]:
-#     sem = asyncio.Semaphore(max_concurrency)
-
-#     async def fetch_one(name: str):
-#         async with sem:
-#             b64 = await get_image_base64(bucket, name)
-#             return name, b64
-
-#     results = await asyncio.gather(*[fetch_one(n) for n in object_names])
-#     results = dict(results)
-#     return [results[name] for name in object_names]
-
-# async def get_image_from_minio(selected_images_out_tab_state: list[dict[str, Any]], selected_images_in_tab_state: list[dict[str, Any]]) -> list[str]:
-#     img_paths = [image["img_path"] for image in selected_images_out_tab_state]
-#     img_paths += [image["img_path"] for image in selected_images_in_tab_state]
-
-#     images = await get_images_base64_batch("image-bucket", img_paths)
-
-    # image_out_tab = images[:len(selected_images_out_tab_state)]
-    # image_in_tab = images[len(selected_images_out_tab_state):]
-
-    # return images #image_out_tab, image_in_tab
-
 async def get_contexts_from_current_state(chunk_knowledge, tables, image_in_table, image_out_table):
     reformat_chunk_knowledge = [f"{i+1}. {chunk['content']}\nSource pages: {chunk['metadata']['page_numbers']}\n\n" for i, chunk in enumerate(chunk_knowledge) if chunk["metadata"]["type"] == "text"]
     reformat_tables = [f"{i+1}. {tab['table']}\nSource pages: {tab['metadata']['page_numbers']}\n\n" for i, tab in enumerate(tables)]
@@ -213,78 +180,6 @@ async def get_contexts_from_current_state(chunk_knowledge, tables, image_in_tabl
     reformat_image_out_table = [f"{i+1}. {image['description']}\nSource page: {image['metadata']['page_number']}\n\n" for i, image in enumerate(image_out_table)]
     
     return reformat_chunk_knowledge, reformat_tables, reformat_image_in_table, reformat_image_out_table
-
-# # Handle duplicate for tables
-# async def duplicate_table(new_selected_table, current_table_state):
-#     current_table_ids = [table["metadata"]["table_id"] for table in current_table_state]
-
-#     new_tables_clean = []
-#     for new_table in new_selected_table:
-#         table_id = new_table["metadata"]["table_id"]
-#         if table_id not in current_table_ids:
-#             new_tables_clean.append(new_table)
-
-#     return new_tables_clean
-
-# # Handle duplicate for images
-# async def duplicate_image(new_selected_image_out_table, current_image_out_table_state, new_selected_image_in_table, current_image_in_table_state):
-#     current_image_ids = [image["image_id"] for image in current_image_out_table_state]
-#     current_image_ids += [image["image_id"] for image in current_image_in_table_state]
-
-#     new_image_out_table = []
-#     for new_image in new_selected_image_out_table:
-#         image_id = new_image["metadata"]["image_id"]
-#         if image_id not in current_image_ids:
-#             new_image_out_table.append(new_image)
-
-#     new_image_in_table = []
-#     for new_image in new_selected_image_in_table:
-#         image_id = new_image["metadata"]["image_id"]
-#         if image_id not in current_image_ids:
-#             new_image_in_table.append(new_image)
-
-#     return new_image_out_table, new_image_in_table
-
-# async def check_image_exists_core(selected_image_state):
-#     selected_image = copy.deepcopy(selected_image_state)
-
-#     if len(selected_image) == 0:
-#         return None, None
-
-#     image_ids = [image["image_id"] for image in selected_image]
-
-#     vector_store = await get_vector_store_chroma("knowledges")
-
-#     collection = vector_store._collection
-#     results = collection.get(
-#         where={"image_id": {"$in": image_ids}},
-#         include=["documents", "metadatas"]
-#     )
-
-#     if len(results["ids"]) > 0:
-#         fetched_image_ids = [image["image_id"] for image in results["metadatas"]]
-#     else:
-#         fetched_image_ids = []
-
-#     item_remove = []
-#     idx_remove = []
-#     for i, img_id in enumerate(image_ids):
-#         if img_id not in fetched_image_ids:
-#             idx_remove.append(i)
-#             item_remove.append(selected_image[i])
-
-#     selected_image = [img for i, img in enumerate(selected_image) if i not in idx_remove]
-#     new_image_ids = [img["image_id"] for img in selected_image]
-
-#     if len(selected_image) == 0 and len(item_remove) > 0:
-#         return item_remove, None
-#     else:
-#         item_append = []
-#         for idx, desc, metadata in zip(results["ids"], results["documents"], results["metadatas"]):
-#             if idx in new_image_ids:
-#                 item_append.append({"description": desc, "metadata": metadata})
-
-#         return item_remove, item_append
 
 async def get_metadata_and_content(results):
     new_results = []
@@ -409,12 +304,9 @@ async def fetch_new_knowledge(
 
             rerank_ids = await cm.reranker.rerank(final_query, list_document, 8)
             results = [results[i] for i in rerank_ids]
-        print(results, flush=True)
-            
+
         result = await check_duplicate_knowledge(results, selected_knowledge, chunk_ids, knowledge_ids)
         selected_knowledge_dict, knowledge_id_append, chunk_append, replace_ids = result
-        # result = await replace_knowledge(results)
-        # selected_knowledge_dict, knowledge_id_append, chunk_append = result
 
         result = await search_tables_and_images_from_chunks(
             chunk_append, 
@@ -432,7 +324,6 @@ async def fetch_new_knowledge(
         result = await filter_chunk_tool(chunk_append, selected_knowledge_dict, replace_ids, knowledge_id_append)
         chunk_append, selected_knowledge_dict, replace_ids, knowledge_id_append = result
 
-        print("len retrieve result:", len(results), flush=True)
         print("Tool: fetch_new_knowledge end", flush=True)
         return Command(
             update={
@@ -543,8 +434,6 @@ llm_rag = llm.with_structured_output(
 ## RAG (retrieve data from database based on just new query)
 async def rag(state: State):
     print("Node: rag", flush=True)
-
-    selected_knowledge = copy.deepcopy(state.get("selected_knowledge", [])) # [{"knowledge_id": knowledge_id, "chunk_ids": [id_1, id_2]}]
    
     use_rerank = state["rerank"]
     if state["bm25"]:
@@ -587,13 +476,12 @@ async def rag(state: State):
             text = response.get("question", "none")
         else:
             text = response.content
-        print(text, flush=True)
 
         if text in ["none", ""]:
             return {}
     else: 
         text = state["messages"][-1].content
-    print(text, flush=True)
+
     # Retrieve from the database
     vector_store = await get_vector_store_chroma("knowledges")
     retriever = await get_vector_store_retriever(vector_store, {"type": {"$in": ["text", "table"]}}, k=8) #, {"type": "text"})
@@ -601,7 +489,6 @@ async def rag(state: State):
     instruct = "Given a user query about the document knowledge, retrieve the relevant passages that answer the query"
     final_query = f"Instruct: {instruct}\nQuery:{text}"
     results = await retriever.ainvoke(final_query)
-    print(state["bm25"], state["rerank"], flush=True)
 
     if state["bm25"]:
         bm25 = BM25Retriever()
@@ -619,19 +506,12 @@ async def rag(state: State):
 
         rerank_ids = await cm.reranker.rerank(final_query, list_document, 8)
         results = [results[i] for i in rerank_ids]
-    print(results, flush=True)
-    
-    # result = await check_duplicate_knowledge(results, selected_knowledge, chunk_ids, knowledge_ids)
-    # selected_knowledge_dict, knowledge_id_append, chunk_append, replace_ids = result
+
     result = await replace_knowledge(results)
     selected_knowledge_dict, knowledge_id_append, chunk_append = result
     
     result = await search_tables_and_images_from_chunks(
-        chunk_append, 
-        [], #state.get("selected_table", []),
-        [], #state.get("selected_image_in_table", []),
-        [], #state.get("selected_image_out_table", []),
-        vector_store,
+        chunk_append, [], [], [], vector_store,
     )
     
     selected_table, tables, selected_image_out_table, image_out_table, selected_image_in_table, image_in_table = result
@@ -643,7 +523,6 @@ async def rag(state: State):
     return {
         "selected_knowledge": {
             "replace": [{"knowledge_id": k_id, "chunk_ids": val["chunk_ids"]} for k_id, val in selected_knowledge_dict.items() if k_id in knowledge_id_append],
-            # "replace": [{"knowledge_id": k_id, "chunk_ids": val["chunk_ids"]} for k_id, val in selected_knowledge_dict.items() if k_id in replace_ids],
         },
         "chunk_knowledge": {
             "replace": chunk_append,
@@ -681,11 +560,10 @@ async def basic(state: State):
         *messages,
         HumanMessage(content=f"User's query: {state['query']}"),
     ]
-    print("token system:", count_tokens([SystemMessage(content=system_query)]), flush=True)
-    final_query = await trimming_message(final_query)
+    print("token system basic:", count_tokens([SystemMessage(content=system_query)]), flush=True)
 
+    final_query = await trimming_message(final_query)
     response = await llm_tools.ainvoke(final_query)
-    print(response, flush=True)
 
     print("Berhasil lewat basic", flush=True)
     return {"messages": [response], "tool_loop": state.get("tool_loop", 0) + 1}
@@ -716,10 +594,9 @@ async def basic_conclusion(state: State):
         HumanMessage(content=f"User's query: {state['query']}"),
     ]
     print("token system (conclusion):", count_tokens([SystemMessage(content=system_query)]), flush=True)
-    final_query = await trimming_message(final_query)
 
+    final_query = await trimming_message(final_query)
     response = await llm_output.ainvoke(final_query)
-    print(response, flush=True)
 
     if not isinstance(response, dict):
         response = {"answer": response.content, "sources": []}
@@ -735,27 +612,15 @@ async def basic_conclusion(state: State):
 async def get_agent():
     builder = StateGraph(State)
     
-    # builder.add_node("check_knowledge_exist", check_knowledge_exist)
-    # builder.add_node("check_table_exists", check_table_exists)
-    # builder.add_node("check_image_out_table_exists", check_image_out_table_exists)
-    # builder.add_node("check_image_in_table_exists", check_image_in_table_exists)
     builder.add_node("rag", rag)
     builder.add_node("basic", basic)
     builder.add_node("basic_conclusion", basic_conclusion)
     builder.add_node("tools", tool_node) 
     
-    # builder.add_edge(START, "check_knowledge_exist")
-    # builder.add_edge(START, "check_table_exists")
-    # builder.add_edge(START, "check_image_out_table_exists")
-    # builder.add_edge(START, "check_image_in_table_exists")
-    # builder.add_edge("check_knowledge_exist", "rag")
-    # builder.add_edge(["rag", "check_table_exists", "check_image_out_table_exists", "check_image_in_table_exists"], "basic")
     builder.add_edge(START, "rag")
     builder.add_edge("rag", "basic")
-    
     builder.add_conditional_edges("basic", should_continue, ["basic_conclusion", "tools"])
     builder.add_edge("tools", "basic")
-
     builder.add_edge("basic_conclusion", END)
     
     return builder

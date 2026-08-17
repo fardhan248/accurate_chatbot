@@ -8,7 +8,7 @@ LLAMA_CPP_KEY = os.getenv("LLAMA_CPP_KEY")
 
 llm = ChatOpenAI(
     base_url=f"http://{LLAMA_CPP_LLM_ENDPOINT}/v1",
-    api_key="none",
+    api_key=LLAMA_CPP_KEY,
     model="/models/Qwen3.5-4B-Q4_K_M.gguf",
     extra_body={
         "chat_template_kwargs": {
@@ -19,18 +19,13 @@ llm = ChatOpenAI(
 
 llm_thinking = ChatOpenAI(
     base_url=f"http://{LLAMA_CPP_LLM_ENDPOINT}/v1",
-    api_key="none",
+    api_key=LLAMA_CPP_KEY,
     model="/models/Qwen3.5-4B-Q4_K_M.gguf",
-    # extra_body={
-    #     "chat_template_kwargs": {
-    #         "enable_thinking": True
-    #     }
-    # },
 )
 
 embedding = OpenAIEmbeddings(
     base_url=f"http://{LLAMA_CPP_EMBEDDING_ENDPOINT}/v1", 
-    api_key="none",
+    api_key=LLAMA_CPP_KEY,
     model="/models/Qwen3-Embedding-4B-Q4_K_M.gguf" 
 )
 

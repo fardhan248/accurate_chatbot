@@ -273,7 +273,6 @@ class BM25Retriever:
         scores = self.bm25.get_scores(query_tokens)
 
         top_ids = scores.argsort()[::-1][:k]
-        print([scores[i] for i in top_ids], flush=True)
 
         return [
             {"metadata": self.metadatas[i], "page_content": self.documents[i]} 

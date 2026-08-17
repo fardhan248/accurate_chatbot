@@ -66,10 +66,6 @@ class State(TypedDict):
     tool_loop: int = 0
     final_answer: dict[str, Any]
 
-class CalculatorExpression(BaseModel):
-    expr: str
-    variables: dict[str, Any] = Field(default_factory=dict)
-
 class LLMOutput(BaseModel):
     answer: str
     sources: Union[list[str], Literal["N/A"]] = "N/A"

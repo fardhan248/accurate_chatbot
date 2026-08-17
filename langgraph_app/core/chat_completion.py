@@ -33,7 +33,7 @@ async def chat_workflow(db_pool, input_data: ChatInput):
     
     try:
         async with AsyncPostgresSaver.from_conn_string(DB_URL) as checkpointer:
-            agent = builder.compile(checkpointer=checkpointer) # Don't forget use checkpointer
+            agent = builder.compile(checkpointer=checkpointer)
 
             result_agent = await agent.ainvoke(
                 {
